@@ -20,19 +20,22 @@ brokers como GBM no ofrecen de forma consolidada.
 | Pruebas | Vitest (a partir del Sprint 6) |
 | Despliegue | Vercel |
 
-## Estado del proyecto: Sprint 1 de 6
+## Estado del proyecto: Sprint 2 de 6
 
-Este repositorio contiene únicamente lo correspondiente al **Sprint 1**
-("Ingesta y validación de CSV + documentación base", 8 story points):
+**Sprint 1** ("Ingesta y validación de CSV + documentación base"):
 
 - Subir un archivo CSV con movimientos.
 - Validar el formato del archivo (encabezados, tipos de dato, filas).
 - Mostrar un mensaje de error claro si el archivo no es válido.
 - Documentación técnica básica (este documento).
 
-Los cálculos de rendimiento, comisiones, comparación contra inflación y
-gráficas de diversificación **no están implementados todavía**: llegan en
-los Sprints 2 a 5 del plan de sprints del proyecto.
+**Sprint 2**:
+
+- Rendimiento simple del portafolio (ver sección más abajo).
+- Total de comisiones pagadas (sin desglose; el desglose es del Sprint 3).
+
+La comparación contra inflación, las comisiones desglosadas y las gráficas
+de diversificación llegan en los Sprints 3 a 5.
 
 ## Estructura del proyecto
 
@@ -48,11 +51,18 @@ dashboard-finanzas/
 │   │   ├── page.tsx        # Página principal (usa CsvUploader)
 │   │   └── globals.css     # Estilos globales (Tailwind)
 │   ├── components/
-│   │   └── csv-uploader.tsx  # Componente cliente: drag&drop, estados, tabla de vista previa
+│   │   ├── csv-uploader.tsx     # Componente cliente: drag&drop, estados, tabla de vista previa
+│   │   ├── rendimiento-card.tsx # Tarjeta con el rendimiento simple y sus estados
+│   │   └── comisiones-card.tsx  # Tarjeta con el total de comisiones
 │   ├── lib/
-│   │   └── csv/
-│   │       ├── schema.ts          # Esquema Zod de una fila del CSV
-│   │       └── parse-movements.ts # Validación de archivo + parseo con Papa Parse
+│   │   ├── formato.ts  # Formato monetario (MXN) compartido
+│   │   ├── comisiones/
+│   │   │   └── calcular-comisiones.ts # Total de comisiones pagadas
+│   │   ├── csv/
+│   │   │   ├── schema.ts          # Esquema Zod de una fila del CSV
+│   │   │   └── parse-movements.ts # Validación de archivo + parseo con Papa Parse
+│   │   └── rendimiento/
+│   │       └── calcular-rendimiento.ts # Fórmula del rendimiento simple
 │   └── types/
 │       └── movement.ts     # Tipos de dominio (Movement, TipoMovimiento, etc.)
 └── README.md
@@ -65,13 +75,52 @@ El CSV debe incluir las siguientes columnas (en cualquier orden):
 | Columna | Tipo | Ejemplo | Notas |
 |---|---|---|---|
 | `fecha` | fecha `AAAA-MM-DD` | `2026-03-01` | |
-| `tipo_movimiento` | texto | `compra` | uno de: compra, venta, dividendo, comision, deposito, retiro |
+| `tipo_movimiento` | texto | `compra` | uno de: compra, venta, dividendo, comision, deposito, retiro, valuacion |
 | `instrumento` | texto | `NAFTRAC` | |
 | `tipo_activo` | texto | `etf` | uno de: accion, etf, fibra, deuda, efectivo, otro |
 | `cantidad` | número ≥ 0 | `50` | |
 | `precio` | número ≥ 0 | `25.40` | |
 | `monto` | número | `1270` | puede ser negativo (ej. comisiones) |
 | `comision` | número ≥ 0 | `15` | |
+
+### Reglas de interpretación
+
+- La dirección de cada flujo la define `tipo_movimiento`, no el signo de
+  `monto` (se toma su valor absoluto).
+- `comision` solo aplica en filas `compra` y `venta`. En filas de tipo
+  `comision` se usa únicamente `monto`, para no contar la comisión dos veces.
+- Una fila `valuacion` no es una operación: indica el precio actual de un
+  instrumento (`precio`) a una fecha de corte (`fecha`). Se usa `cantidad`,
+  `monto` y `comision` en 0. Cada instrumento que aún se tenga necesita al
+  menos una fila `valuacion`; si hay varias, se usa la más reciente.
+
+## Rendimiento simple del portafolio (Sprint 2)
+
+```
+R = (V − C) / C
+C = Σ depósitos − Σ retiros                       (capital neto aportado)
+E = efectivo tras depósitos, retiros, compras (+comisión), ventas (−comisión),
+    dividendos y comisiones                         (efectivo disponible)
+V = E + Σ unidades_i × precio_actual_i             (valor actual)
+```
+
+La implementación y la documentación detallada de cada variable están en
+`src/lib/rendimiento/calcular-rendimiento.ts`. Si falta la valuación de
+algún instrumento en posesión, si se vendieron más unidades de las
+compradas o si el capital neto no es positivo, la interfaz explica por qué
+no se puede calcular en lugar de mostrar un número.
+
+## Total de comisiones pagadas (Sprint 2)
+
+```
+T = Σ comision de filas compra y venta + Σ |monto| de filas comision
+```
+
+Implementado en `src/lib/comisiones/calcular-comisiones.ts`. La suma se
+hace en centavos para evitar errores de redondeo, y cualquier valor no
+numérico que llegara al cálculo se ignora. Si no hay comisiones, se muestra
+$0.00 con una nota. Con el CSV de ejemplo el total es $90.00
+(15 + 20 + 10 + 45).
 
 Puedes probar el flujo con los archivos incluidos en
 `public/sample-data/`: uno pasa la validación completa y el otro contiene

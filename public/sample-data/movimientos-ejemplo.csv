@@ -5,3 +5,5 @@ fecha,tipo_movimiento,instrumento,tipo_activo,cantidad,precio,monto,comision
 2026-02-15,dividendo,FIBRAMQ12,fibra,0,0,120,0
 2026-03-01,venta,NAFTRAC,etf,20,26.10,522,10
 2026-03-10,comision,N/A,efectivo,0,0,-45,45
+2026-03-31,valuacion,NAFTRAC,etf,0,27.00,0,0
+2026-03-31,valuacion,FIBRAMQ12,fibra,0,29.50,0,0

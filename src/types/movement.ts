@@ -2,9 +2,8 @@
  * Tipos de dominio para el prototipo "Dashboard de Finanzas Personales".
  *
  * Un Movement representa una fila del CSV de movimientos que el usuario
- * exporta de su broker (por ejemplo GBM). El objetivo del Sprint 1 es
- * únicamente leer y validar este archivo; los cálculos de rendimiento,
- * comisiones y diversificación llegan en sprints posteriores.
+ * exporta de su broker (por ejemplo GBM), o una fila de valuación con el
+ * precio actual de un instrumento (tipoMovimiento = "valuacion").
  */
 
 export const TIPOS_MOVIMIENTO = [
@@ -14,6 +13,10 @@ export const TIPOS_MOVIMIENTO = [
   "comision",
   "deposito",
   "retiro",
+  // Fila de valuación: no es una operación, sino el precio actual de un
+  // instrumento a una fecha de corte (`precio` = precio actual, `fecha` =
+  // fecha de corte). Se usa para calcular el valor actual del portafolio.
+  "valuacion",
 ] as const;
 
 export const TIPOS_ACTIVO = [

@@ -8,9 +8,10 @@ export default function Home() {
           Dashboard de Finanzas Personales
         </h1>
         <p className="mt-2 text-sm text-gray-500">
-          Sprint 1 · Sube el estado de cuenta (CSV) de tu broker para
-          comenzar. Este prototipo aún no calcula rendimiento, comisiones ni
-          diversificación — eso llega en los siguientes sprints.
+          Sprint 2 · Sube el estado de cuenta (CSV) de tu broker para ver el
+          rendimiento simple de tu portafolio y el total de comisiones
+          pagadas. El desglose de comisiones, la comparación contra inflación
+          y la diversificación llegan en los siguientes sprints.
         </p>
       </div>
 

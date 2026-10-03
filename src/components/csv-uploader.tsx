@@ -2,6 +2,8 @@
 
 import { useCallback, useRef, useState } from "react";
 import { parseMovementsCsv } from "@/lib/csv/parse-movements";
+import { RendimientoCard } from "@/components/rendimiento-card";
+import { ComisionesCard } from "@/components/comisiones-card";
 import type { CsvRowError, Movement } from "@/types/movement";
 
 type Status = "idle" | "parsing" | "success" | "error";
@@ -207,6 +209,15 @@ export function CsvUploader() {
           )}
         </div>
       )}
+
+      <RendimientoCard
+        movimientos={state.data}
+        filasConError={state.errors.length}
+      />
+      <ComisionesCard
+        movimientos={state.data}
+        filasConError={state.errors.length}
+      />
     </div>
   );
 }

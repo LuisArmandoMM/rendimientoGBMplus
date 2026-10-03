@@ -1,126 +1,49 @@
 # Dashboard de Finanzas Personales
 
-Prototipo académico — **Proyectos VII**, UDG Virtual.
-Equipo: Luis Armando Mercado Mojica, Yael Isai Ochoa Gutiérrez.
+Prototipo para inversionistas retail en México. Procesa un CSV de movimientos del portafolio y muestra
+rendimiento simple, comparación contra inflación y comisiones. Todo se procesa en el navegador.
 
-Dashboard que procesa el estado de cuenta (CSV) de un inversionista retail
-mexicano para mostrarle su rendimiento real frente a la inflación, el total
-de comisiones pagadas y la diversificación de sus activos: información que
-brokers como GBM no ofrecen de forma consolidada.
+**Stack:** Next.js 15 (App Router) · TypeScript · React 19 · Tailwind CSS · Recharts · Papa Parse · Zod · Vitest
 
-## Stack técnico
-
-| Capa | Herramienta |
-|---|---|
-| Framework | Next.js (App Router) + TypeScript |
-| UI | React, Tailwind CSS (shadcn/ui a partir del Sprint 4) |
-| Gráficas | Recharts (a partir del Sprint 4) |
-| Parseo de CSV | Papa Parse |
-| Validación de datos | Zod |
-| Pruebas | Vitest (a partir del Sprint 6) |
-| Despliegue | Vercel |
-
-## Estado del proyecto: Sprint 1 de 6
-
-Este repositorio contiene únicamente lo correspondiente al **Sprint 1**
-("Ingesta y validación de CSV + documentación base", 8 story points):
-
-- Subir un archivo CSV con movimientos.
-- Validar el formato del archivo (encabezados, tipos de dato, filas).
-- Mostrar un mensaje de error claro si el archivo no es válido.
-- Documentación técnica básica (este documento).
-
-Los cálculos de rendimiento, comisiones, comparación contra inflación y
-gráficas de diversificación **no están implementados todavía**: llegan en
-los Sprints 2 a 5 del plan de sprints del proyecto.
-
-## Estructura del proyecto
-
-```
-dashboard-finanzas/
-├── public/
-│   └── sample-data/
-│       ├── movimientos-ejemplo.csv        # CSV válido para probar la carga
-│       └── movimientos-con-errores.csv    # CSV con errores intencionales
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx      # Layout raíz + metadata
-│   │   ├── page.tsx        # Página principal (usa CsvUploader)
-│   │   └── globals.css     # Estilos globales (Tailwind)
-│   ├── components/
-│   │   └── csv-uploader.tsx  # Componente cliente: drag&drop, estados, tabla de vista previa
-│   ├── lib/
-│   │   └── csv/
-│   │       ├── schema.ts          # Esquema Zod de una fila del CSV
-│   │       └── parse-movements.ts # Validación de archivo + parseo con Papa Parse
-│   └── types/
-│       └── movement.ts     # Tipos de dominio (Movement, TipoMovimiento, etc.)
-└── README.md
-```
-
-## Formato de archivo esperado
-
-El CSV debe incluir las siguientes columnas (en cualquier orden):
-
-| Columna | Tipo | Ejemplo | Notas |
-|---|---|---|---|
-| `fecha` | fecha `AAAA-MM-DD` | `2026-03-01` | |
-| `tipo_movimiento` | texto | `compra` | uno de: compra, venta, dividendo, comision, deposito, retiro |
-| `instrumento` | texto | `NAFTRAC` | |
-| `tipo_activo` | texto | `etf` | uno de: accion, etf, fibra, deuda, efectivo, otro |
-| `cantidad` | número ≥ 0 | `50` | |
-| `precio` | número ≥ 0 | `25.40` | |
-| `monto` | número | `1270` | puede ser negativo (ej. comisiones) |
-| `comision` | número ≥ 0 | `15` | |
-
-Puedes probar el flujo con los archivos incluidos en
-`public/sample-data/`: uno pasa la validación completa y el otro contiene
-errores a propósito (fecha con formato incorrecto, `tipo_movimiento`
-inválido, `tipo_activo` inválido y una cantidad negativa) para mostrar el
-manejo de errores fila por fila.
-
-## Decisiones técnicas del Sprint 1
-
-- **Validación por fila, no por archivo completo**: si algunas filas tienen
-  errores, el archivo no se rechaza entero — se muestran los movimientos
-  válidos y, aparte, la lista de filas con problema y por qué fallaron. Esto
-  le da al usuario información accionable para corregir su CSV.
-- **Validación de encabezado antes que de contenido**: si al archivo le
-  faltan columnas, se informa de inmediato qué columnas faltan, sin intentar
-  procesar filas que de todos modos no tendrían los datos necesarios.
-- **Zod como capa de validación**: se eligió Zod (ya considerado en el stack
-  del proyecto) para centralizar las reglas de cada columna y sus mensajes
-  de error en un solo lugar (`src/lib/csv/schema.ts`), reutilizable cuando
-  se agregue lectura de PDF en una etapa futura.
-- **Todo corre en el cliente**: por ahora no hay backend; el parseo y la
-  validación ocurren en el navegador con Papa Parse. Esto es suficiente para
-  el alcance del prototipo (nadie más ve el estado de cuenta del usuario) y
-  se revisará si en sprints posteriores se necesita persistencia.
-
-## Cómo correr el proyecto
+## Ejecutar
 
 ```bash
 npm install
-npm run dev
+npm run dev      # http://localhost:3000
+npm test         # pruebas unitarias
+npm run build    # compilación de producción
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) y sube uno de los
-archivos de `public/sample-data/`.
+## Formato del CSV
 
-Otros comandos útiles:
-
-```bash
-npm run build      # build de producción
-npm run lint        # ESLint
-npx tsc --noEmit    # verificación de tipos
+```csv
+fecha,tipo,emisora,titulos,precio,comision
+2024-02-05,compra,WALMEX*,50,58.40,14.60
 ```
 
-## Próximos sprints (referencia)
+| Columna  | Regla |
+|----------|-------|
+| fecha    | `AAAA-MM-DD`, fecha real |
+| tipo     | `compra`, `venta` o `dividendo` |
+| emisora  | texto obligatorio (se guarda en mayúsculas) |
+| titulos  | número > 0 |
+| precio   | número > 0 (en `dividendo`: dividendo por título) |
+| comision | número ≥ 0 |
 
-| Sprint | Contenido |
-|---|---|
-| 2 | Rendimiento simple del portafolio + comisiones totales |
-| 3 | Comparación vs. inflación + comisiones desglosadas |
-| 4 | Gráfica de diversificación + filtro por periodo |
-| 5 | Dashboard integrado con métricas principales |
-| 6 | Responsividad + pruebas unitarias |
+Además se valida que nunca se venda más de lo que hay en cartera. Un ejemplo está en `public/ejemplo.csv`.
+
+## Entregables y dónde viven
+
+| Entregable | Código |
+|-----------|--------|
+| E1 Carga y validación de CSV | `src/lib/schema.ts`, `src/lib/parseCsv.ts`, `src/components/CargaCsv.tsx` |
+| E2 Rendimiento vs. inflación | `src/lib/rendimiento.ts`, `src/lib/inflacion.ts`, `src/data/inflacion.json`, `src/components/PanelRendimiento.tsx` |
+| E3 Comisiones | `src/lib/comisiones.ts`, `src/components/PanelComisiones.tsx` |
+
+## Cálculos
+
+- **Rendimiento simple** = (ventas + dividendos + valor de la tenencia − compras − comisiones) / (compras + comisiones).
+  La tenencia se valúa con el último precio registrado de cada emisora en el CSV.
+- **Inflación acumulada**: se aplica la tasa anual de cada año de forma proporcional a los días del periodo
+  (`src/data/inflacion.json`, datos INEGI; actualizar cuando se publiquen nuevos).
+- **Rendimiento real** = (1 + rendimiento) / (1 + inflación) − 1.

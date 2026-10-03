@@ -1,0 +1,9 @@
+{
+  "fuente": "INEGI (INPC), inflación general anual. Cifras de diciembre de 2023, 2024 y 2025; 2026 corresponde a agosto de 2026 (dato más reciente al elaborar el prototipo). Actualizar al publicarse nuevos datos.",
+  "anual": {
+    "2023": 4.66,
+    "2024": 4.21,
+    "2025": 3.69,
+    "2026": 3.26
+  }
+}

@@ -32,3 +32,20 @@ describe("calcularComisiones (E3)", () => {
     expect(calcularComisiones(datos).porcentajeSobreOperado).toBeCloseTo(25 / 2500);
   });
 });
+
+describe("sprint 3: desglose por tipo", () => {
+  const datos = [
+    m("2024-01-01", "compra", "AAA", 10, 100, 10),
+    m("2024-02-01", "venta", "AAA", 5, 100, 4),
+    m("2024-03-01", "compra", "BBB", 10, 100, 12),
+  ];
+  it("agrupa por tipo con número de operaciones", () => {
+    const t = calcularComisiones(datos).porTipo;
+    expect(t.find((x) => x.tipo === "compra")).toEqual({ tipo: "compra", comision: 22, operaciones: 2 });
+    expect(t.find((x) => x.tipo === "venta")?.operaciones).toBe(1);
+  });
+  it("identifica la comisión más alta", () => {
+    expect(calcularComisiones(datos).mayor?.emisora).toBe("BBB");
+    expect(calcularComisiones([m("2024-01-01", "compra", "AAA", 1, 1, 0)]).mayor).toBeNull();
+  });
+});

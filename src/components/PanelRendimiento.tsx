@@ -3,10 +3,10 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { FUENTE_INFLACION } from "@/lib/inflacion";
 import { formatoFecha, formatoMXN, formatoPct } from "@/lib/format";
-import type { ComparacionInflacion, Rendimiento } from "@/lib/rendimiento";
+import type { AjustePorInflacion, ComparacionInflacion, Rendimiento } from "@/lib/rendimiento";
 import Tarjeta from "./Tarjeta";
 
-export default function PanelRendimiento({ r, c }: { r: Rendimiento; c: ComparacionInflacion }) {
+export default function PanelRendimiento({ r, c, a }: { r: Rendimiento; c: ComparacionInflacion; a: AjustePorInflacion }) {
   const datos = [
     { nombre: "Rendimiento del portafolio", valor: +(r.rendimientoSimple * 100).toFixed(2), color: r.rendimientoSimple >= 0 ? "#047857" : "#b91c1c" },
     { nombre: "Inflación acumulada", valor: +(c.inflacionAcumulada * 100).toFixed(2), color: "#64748b" },
@@ -31,6 +31,25 @@ export default function PanelRendimiento({ r, c }: { r: Rendimiento; c: Comparac
           titulo="Rendimiento simple"
           valor={formatoPct(r.rendimientoSimple)}
           tono={r.rendimientoSimple >= 0 ? "positivo" : "negativo"}
+        />
+      </div>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <Tarjeta
+          titulo="Capital ajustado por inflación"
+          valor={formatoMXN(a.capitalAjustado)}
+          detalle="Lo necesario hoy para conservar el poder adquisitivo de cada aportación"
+        />
+        <Tarjeta
+          titulo="Ganancia real"
+          valor={formatoMXN(a.gananciaReal)}
+          detalle="Valor actual − capital ajustado"
+          tono={a.gananciaReal >= 0 ? "positivo" : "negativo"}
+        />
+        <Tarjeta
+          titulo="Rendimiento sin comisiones"
+          valor={formatoPct(r.rendimientoSinComisiones)}
+          detalle={`Las comisiones restan ${formatoPct(r.rendimientoSinComisiones - r.rendimientoSimple)} al rendimiento`}
         />
       </div>
 

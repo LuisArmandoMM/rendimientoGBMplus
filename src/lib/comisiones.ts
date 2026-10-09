@@ -16,6 +16,9 @@ export interface ResumenComisiones {
   porcentajeSobreOperado: number;
   filas: FilaComision[];
   porEmisora: { emisora: string; comision: number }[];
+  porTipo: { tipo: TipoMovimiento; comision: number; operaciones: number }[];
+  /** Movimiento con la comisión más alta en pesos (null si no hay comisiones). */
+  mayor: FilaComision | null;
 }
 
 /**
@@ -46,5 +49,26 @@ export function calcularComisiones(movimientos: Movimiento[]): ResumenComisiones
     .map(([emisora, comision]) => ({ emisora, comision }))
     .sort((a, b) => b.comision - a.comision);
 
-  return { total, porcentajeSobreOperado: operado > 0 ? total / operado : 0, filas, porEmisora };
+  const tipos = new Map<TipoMovimiento, { comision: number; operaciones: number }>();
+  for (const f of filas) {
+    const t = tipos.get(f.tipo) ?? { comision: 0, operaciones: 0 };
+    t.comision += f.comision;
+    t.operaciones += 1;
+    tipos.set(f.tipo, t);
+  }
+  const porTipo = [...tipos.entries()].map(([tipo, v]) => ({ tipo, ...v }));
+
+  const mayor = filas.reduce<FilaComision | null>(
+    (max, f) => (f.comision > 0 && (!max || f.comision > max.comision) ? f : max),
+    null
+  );
+
+  return {
+    total,
+    porcentajeSobreOperado: operado > 0 ? total / operado : 0,
+    filas,
+    porEmisora,
+    porTipo,
+    mayor,
+  };
 }

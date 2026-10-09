@@ -54,3 +54,28 @@ describe("inflación", () => {
     expect(c.rendimientoReal).toBeCloseTo(1.1 / 1.0369 - 1, 4);
   });
 });
+
+import { ajustarPorInflacion } from "@/lib/rendimiento";
+
+describe("sprint 3: ajuste por inflación y comisiones", () => {
+  it("ajusta cada aportación desde su propia fecha", () => {
+    const movs = [m("2025-01-01", "compra", "AAA", 10, 100, 0), m("2026-01-01", "venta", "AAA", 10, 110)];
+    const r = calcularRendimiento(movs);
+    const a = ajustarPorInflacion(movs, r);
+    expect(a.capitalAjustado).toBeCloseTo(1000 * 1.0369, 1);
+    expect(a.gananciaReal).toBeCloseTo(1100 - 1036.9, 1);
+  });
+
+  it("una compra hecha el último día no se ajusta", () => {
+    const movs = [m("2025-01-01", "compra", "AAA", 1, 100, 0), m("2026-01-01", "compra", "AAA", 10, 100, 0)];
+    const r = calcularRendimiento(movs);
+    const a = ajustarPorInflacion(movs, r);
+    expect(a.capitalAjustado).toBeCloseTo(100 * 1.0369 + 1000, 1);
+  });
+
+  it("calcula el rendimiento sin comisiones", () => {
+    const r = calcularRendimiento([m("2024-01-01", "compra", "AAA", 10, 100, 10), m("2024-06-01", "venta", "AAA", 10, 120, 10)]);
+    expect(r.rendimientoSinComisiones).toBeCloseTo(200 / 1000);
+    expect(r.rendimientoSimple).toBeCloseTo(180 / 1010);
+  });
+});

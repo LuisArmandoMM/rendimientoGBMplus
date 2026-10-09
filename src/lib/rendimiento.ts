@@ -24,7 +24,16 @@ export interface Rendimiento {
   ganancia: number;
   /** Rendimiento simple del periodo (fracción). */
   rendimientoSimple: number;
+  /** Rendimiento que habría tenido el portafolio sin pagar comisiones (fracción). */
+  rendimientoSinComisiones: number;
   tenencias: Tenencia[];
+}
+
+export interface AjustePorInflacion {
+  /** Lo que habría que tener hoy para conservar el poder adquisitivo de cada aportación. */
+  capitalAjustado: number;
+  /** Valor final menos capital ajustado: ganancia en pesos ya descontada la inflación. */
+  gananciaReal: number;
 }
 
 export interface ComparacionInflacion {
@@ -109,6 +118,8 @@ export function calcularRendimiento(movimientos: Movimiento[]): Rendimiento {
     valorFinal,
     ganancia,
     rendimientoSimple: capitalInvertido > 0 ? ganancia / capitalInvertido : 0,
+    rendimientoSinComisiones:
+      totalCompras > 0 ? (ganancia + totalComisiones) / totalCompras : 0,
     tenencias,
   };
 }
@@ -122,4 +133,20 @@ export function compararConInflacion(r: Rendimiento): ComparacionInflacion {
     rendimientoReal: (1 + r.rendimientoSimple) / (1 + acumulada) - 1,
     superaInflacion: r.rendimientoSimple > acumulada,
   };
+}
+
+/**
+ * Sprint 3: ajusta cada aportación (compra + comisión) por la inflación desde su
+ * propia fecha hasta el final del periodo. Así una compra reciente no se penaliza
+ * con la inflación de todo el periodo.
+ * Simplificación: los ingresos por ventas y dividendos se toman a valor nominal.
+ */
+export function ajustarPorInflacion(movimientos: Movimiento[], r: Rendimiento): AjustePorInflacion {
+  let capitalAjustado = 0;
+  for (const m of movimientos) {
+    const aporte = (m.tipo === "compra" ? m.titulos * m.precio : 0) + m.comision;
+    if (aporte <= 0) continue;
+    capitalAjustado += aporte * (1 + inflacionAcumulada(m.fecha, r.fechaFin).acumulada);
+  }
+  return { capitalAjustado, gananciaReal: r.valorFinal - capitalAjustado };
 }

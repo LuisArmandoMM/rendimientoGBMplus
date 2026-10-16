@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import CargaCsv from "@/components/CargaCsv";
 import PanelComisiones from "@/components/PanelComisiones";
+import PanelDiversificacion from "@/components/PanelDiversificacion";
 import PanelRendimiento from "@/components/PanelRendimiento";
 import { calcularComisiones } from "@/lib/comisiones";
 import { ajustarPorInflacion, calcularRendimiento, compararConInflacion } from "@/lib/rendimiento";
@@ -45,6 +46,7 @@ export default function Home() {
           </p>
           <PanelRendimiento r={analisis.rendimiento} c={analisis.comparacion} a={analisis.ajuste} />
           <PanelComisiones resumen={analisis.comisiones} />
+          {movimientos && <PanelDiversificacion key={archivo} movimientos={movimientos} />}
         </>
       )}
     </main>

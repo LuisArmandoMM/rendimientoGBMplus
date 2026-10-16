@@ -39,6 +39,7 @@ Además se valida que nunca se venda más de lo que hay en cartera. Un ejemplo e
 | E1 Carga y validación de CSV | `src/lib/schema.ts`, `src/lib/parseCsv.ts`, `src/components/CargaCsv.tsx` |
 | E2 Rendimiento vs. inflación | `src/lib/rendimiento.ts`, `src/lib/inflacion.ts`, `src/data/inflacion.json`, `src/components/PanelRendimiento.tsx` |
 | E3 Comisiones | `src/lib/comisiones.ts`, `src/components/PanelComisiones.tsx` |
+| E4 Diversificación por activo | `src/lib/diversificacion.ts`, `src/components/PanelDiversificacion.tsx` |
 
 ## Cálculos
 
@@ -54,3 +55,10 @@ Además se valida que nunca se venda más de lo que hay en cartera. Un ejemplo e
 - Rendimiento sin comisiones y puntos porcentuales que restan las comisiones.
 - Comisiones por movimiento, por emisora (gráfica), por tipo de movimiento y comisión más alta.
 - 22 pruebas unitarias (`npm test`).
+
+## Sprint 4 – Diversificación por activo
+
+- Gráfica de barra apilada al 100 % con el peso de cada emisora en el valor de la tenencia actual (último precio registrado), más tabla con valor y porcentaje.
+- Hasta 7 segmentos con color propio; si hay más emisoras, las menores se agrupan en "Otras".
+- Índice Herfindahl-Hirschman (HHI) y activos efectivos (1 / HHI): diversificada si HHI < 1 500, moderada hasta 2 500, concentrada arriba.
+- Filtro de la gráfica por periodo: botones "Actual" y "Cierre AAAA" por cada año, o una fecha de corte libre. La cartera se reconstruye con los movimientos hasta esa fecha y se valúa con el último precio registrado hasta entonces. Cada emisora conserva su color al cambiar de periodo.

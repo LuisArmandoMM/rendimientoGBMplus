@@ -7,10 +7,10 @@ import Tarjeta from "./Tarjeta";
 
 export default function PanelComisiones({ resumen }: { resumen: ResumenComisiones }) {
   return (
-    <section aria-labelledby="titulo-com" className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section id="comisiones" aria-labelledby="titulo-com" className="scroll-mt-20 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <h2 id="titulo-com" className="text-lg font-semibold">3. Comisiones pagadas</h2>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Tarjeta titulo="Total de comisiones" valor={formatoMXN(resumen.total)} tono={resumen.total > 0 ? "negativo" : "neutro"} />
         <Tarjeta titulo="% sobre monto operado" valor={formatoPct(resumen.porcentajeSobreOperado)} />
         <Tarjeta
@@ -25,7 +25,7 @@ export default function PanelComisiones({ resumen }: { resumen: ResumenComisione
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={resumen.porEmisora.map((e) => ({ ...e, comision: +e.comision.toFixed(2) }))} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="emisora" tick={{ fontSize: 12 }} />
+              <XAxis dataKey="emisora" tick={{ fontSize: 11 }} interval={0} />
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip formatter={(v: number) => formatoMXN(v)} />
               <Bar dataKey="comision" name="Comisión" fill="#b45309" radius={[6, 6, 0, 0]} />
@@ -51,8 +51,28 @@ export default function PanelComisiones({ resumen }: { resumen: ResumenComisione
         </div>
       </div>
 
-      <div className="mt-6 overflow-x-auto">
-        <table className="w-full min-w-[640px] text-left text-sm">
+      {/* Móvil: cada movimiento como tarjeta; desde md se muestra la tabla completa. */}
+      <ul className="mt-6 space-y-2 text-sm md:hidden" aria-label="Comisiones desglosadas por movimiento">
+        {resumen.filas.map((f, i) => (
+          <li key={i} className="rounded-lg border border-slate-200 p-3">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="font-medium">{f.emisora}</span>
+              <span className="text-xs text-slate-500">{formatoFecha(f.fecha)} · <span className="capitalize">{f.tipo}</span></span>
+            </div>
+            <div className="mt-1 flex justify-between gap-2 text-slate-600">
+              <span>Monto {formatoMXN(f.monto)}</span>
+              <span className="font-medium text-slate-900">{formatoMXN(f.comision)} ({formatoPct(f.porcentaje)})</span>
+            </div>
+          </li>
+        ))}
+        <li className="flex justify-between rounded-lg bg-slate-50 p-3 font-semibold">
+          <span>Total</span>
+          <span>{formatoMXN(resumen.total)}</span>
+        </li>
+      </ul>
+
+      <div className="mt-6 hidden overflow-x-auto md:block">
+        <table className="w-full text-left text-sm">
           <caption className="sr-only">Comisiones desglosadas por movimiento</caption>
           <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
             <tr>

@@ -36,7 +36,7 @@ export default function PanelDiversificacion({ movimientos }: { movimientos: Mov
   const fila = Object.fromEntries(d.segmentos.map((s) => [s.emisora, +(s.peso * 100).toFixed(2)]));
 
   return (
-    <section aria-labelledby="titulo-div" className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section id="diversificacion" aria-labelledby="titulo-div" className="scroll-mt-20 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <h2 id="titulo-div" className="text-lg font-semibold">4. Diversificación por activo</h2>
 
       <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="Periodo de la gráfica">
@@ -53,7 +53,7 @@ export default function PanelDiversificacion({ movimientos }: { movimientos: Mov
             {p.etiqueta}
           </button>
         ))}
-        <label className="ml-auto flex items-center gap-2 text-sm text-slate-600">
+        <label className="flex w-full items-center gap-2 text-sm text-slate-600 sm:ml-auto sm:w-auto">
           Al corte del
           <input
             type="date"
@@ -61,7 +61,7 @@ export default function PanelDiversificacion({ movimientos }: { movimientos: Mov
             min={fechas[0]}
             max={fechas[fechas.length - 1]}
             onChange={(e) => e.target.value && setCorte(e.target.value)}
-            className="rounded-md border border-slate-300 px-2 py-1 text-slate-900"
+            className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-slate-900 sm:flex-none"
           />
         </label>
       </div>
@@ -75,7 +75,7 @@ export default function PanelDiversificacion({ movimientos }: { movimientos: Mov
         valuada con el último precio registrado hasta esa fecha.
       </p>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Tarjeta titulo="Emisoras en cartera" valor={String(d.activos.length)} />
         <Tarjeta titulo="Posición más grande" valor={formatoPct(mayor.peso, 1)} detalle={mayor.emisora} />
         <Tarjeta
@@ -112,14 +112,14 @@ export default function PanelDiversificacion({ movimientos }: { movimientos: Mov
       </div>
 
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[480px] text-left text-sm">
+        <table className="w-full text-left text-sm">
           <caption className="sr-only">Diversificación de la cartera por emisora</caption>
           <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
             <tr>
               <th className="py-2 pr-4">Emisora</th>
               <th className="py-2 pr-4 text-right">Valor</th>
               <th className="py-2 pr-4 text-right">Peso</th>
-              <th className="w-2/5 py-2"><span className="sr-only">Proporción</span></th>
+              <th className="hidden w-2/5 py-2 sm:table-cell"><span className="sr-only">Proporción</span></th>
             </tr>
           </thead>
           <tbody>
@@ -131,7 +131,7 @@ export default function PanelDiversificacion({ movimientos }: { movimientos: Mov
                 </td>
                 <td className="py-2 pr-4 text-right">{formatoMXN(s.valor)}</td>
                 <td className="py-2 pr-4 text-right">{formatoPct(s.peso, 1)}</td>
-                <td className="py-2" aria-hidden>
+                <td className="hidden py-2 sm:table-cell" aria-hidden>
                   <div className="h-2 rounded-full bg-slate-100">
                     <div className="h-2 rounded-full" style={{ width: `${s.peso * 100}%`, background: colorDe(s.emisora) }} />
                   </div>

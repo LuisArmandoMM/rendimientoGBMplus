@@ -39,6 +39,8 @@ Además se valida que nunca se venda más de lo que hay en cartera. Un ejemplo e
 | E1 Carga y validación de CSV | `src/lib/schema.ts`, `src/lib/parseCsv.ts`, `src/components/CargaCsv.tsx` |
 | E2 Rendimiento vs. inflación | `src/lib/rendimiento.ts`, `src/lib/inflacion.ts`, `src/data/inflacion.json`, `src/components/PanelRendimiento.tsx` |
 | E3 Comisiones | `src/lib/comisiones.ts`, `src/components/PanelComisiones.tsx` |
+| E4 Diversificación por activo | `src/lib/diversificacion.ts`, `src/components/PanelDiversificacion.tsx` |
+| E5 Dashboard de métricas principales | `src/lib/resumen.ts`, `src/components/PanelResumen.tsx`, `src/app/page.tsx` |
 
 ## Cálculos
 
@@ -55,12 +57,19 @@ Además se valida que nunca se venda más de lo que hay en cartera. Un ejemplo e
 - Comisiones por movimiento, por emisora (gráfica), por tipo de movimiento y comisión más alta.
 - 22 pruebas unitarias (`npm test`).
 
-## Sprint 4 y Sprint 5
+## Sprint 4 – Diversificación por activo + filtro por periodo
 
-- **Sprint 4 – Gráfica de diversificación + filtro por periodo:** `src/lib/diversificacion.ts`, `src/lib/periodo.ts`,
-  `PanelDiversificacion.tsx` y `FiltroPeriodo.tsx`. El filtro acepta periodos rápidos (todo, año en curso, 12 y 6 meses) o fechas
-  personalizadas. Lo que ya se tenía antes de la fecha inicial se toma como saldo inicial, valuado al último precio previo.
-- **Sprint 5 – Dashboard integrado con métricas principales:** `src/lib/resumen.ts` y `ResumenKpis.tsx` muestran 8 métricas
-  (valor actual, capital, ganancia, rendimiento, inflación, rendimiento real, comisiones y mayor concentración). La página
-  integra todos los módulos con navegación por secciones y el filtro de periodo aplicado a todos los paneles.
-- 32 pruebas unitarias (`npm test`).
+- Gráfica de barra apilada al 100 % con el peso de cada emisora en el valor de la tenencia actual (último precio registrado), más tabla con valor y porcentaje.
+- Hasta 7 segmentos con color propio; si hay más emisoras, las menores se agrupan en "Otras".
+- Índice Herfindahl-Hirschman (HHI) y activos efectivos (1 / HHI): diversificada si HHI < 1 500, moderada hasta 2 500, concentrada arriba.
+- Filtro de la gráfica por periodo: botones "Actual" y "Cierre AAAA" por cada año, o una fecha de corte libre. La cartera se reconstruye con los movimientos hasta esa fecha y se valúa con el último precio registrado hasta entonces. Cada emisora conserva su color al cambiar de periodo.
+- `src/lib/diversificacion.ts`, `src/lib/periodo.ts`, `PanelDiversificacion.tsx` y `FiltroPeriodo.tsx` implementan la visión de diversificación y el filtro de periodos.
+
+## Sprint 5 – Dashboard integrado de métricas principales + diseño responsivo
+
+- Panel "Resumen de tu portafolio" al inicio, con varias métricas clave: valor actual, capital invertido, ganancia, rendimiento simple, rendimiento real (vs. inflación), comisiones pagadas y nivel de diversificación.
+- `src/lib/resumen.ts` y `ResumenKpis.tsx` agrupan 8 métricas del portafolio y la página integra todos los módulos con navegación por secciones y el filtro de periodo aplicado a todos los paneles.
+- Gráfica de líneas de capital invertido acumulado contra valor del portafolio en cada fecha con movimientos (`evolucionPortafolio`); el último punto coincide con el rendimiento del periodo.
+- Barra de navegación fija con accesos a cada sección (desplazable horizontalmente en móvil).
+- Responsivo: indicadores en 2 columnas en móvil, tamaños de texto y márgenes adaptativos, la tabla de comisiones se muestra como tarjetas en pantallas pequeñas, la tabla de diversificación oculta la barra de proporción y el filtro de fecha ocupa el ancho completo.
+- 34 pruebas unitarias (`npm test`).

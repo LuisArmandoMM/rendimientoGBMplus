@@ -12,7 +12,7 @@ import { calcularDiversificacion } from "@/lib/diversificacion";
 import { formatoFecha } from "@/lib/format";
 import { aplicarPeriodo, limitesFechas, periodoPreset, type Periodo, type PresetPeriodo } from "@/lib/periodo";
 import { ajustarPorInflacion, calcularRendimiento, compararConInflacion } from "@/lib/rendimiento";
-import { construirResumen } from "@/lib/resumen";
+import { construirResumen, evolucionPortafolio } from "@/lib/resumen";
 import type { Movimiento } from "@/lib/tipos";
 
 const SECCIONES = [
@@ -20,6 +20,7 @@ const SECCIONES = [
   { href: "#rendimiento", texto: "Rendimiento" },
   { href: "#diversificacion", texto: "Diversificación" },
   { href: "#comisiones", texto: "Comisiones" },
+];
 ];
 
 export default function Home() {
@@ -41,18 +42,19 @@ export default function Home() {
     return {
       vacio: false as const,
       rendimiento,
-      comparacion,
-      ajuste: ajustarPorInflacion(datos.analisis, rendimiento),
-      comisiones,
-      diversificacion,
-      resumen: construirResumen(rendimiento, comparacion, comisiones, diversificacion),
+      comparacion: compararConInflacion(rendimiento),
+      ajuste: ajustarPorInflacion(movimientos, rendimiento),
+      comisiones: calcularComisiones(movimientos),
+      diversificacion: calcularDiversificacion(rendimiento.tenencias),
+      resumen: construirResumen(rendimiento, compararConInflacion(rendimiento), calcularComisiones(movimientos), calcularDiversificacion(rendimiento.tenencias)),
       saldoInicial: datos.saldoInicial,
       total: datos.reales.length,
+      evolucion: evolucionPortafolio(movimientos),
     };
   }, [movimientos, periodo]);
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
+    <main className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:py-8">
       <header>
         <h1 className="text-2xl font-bold">Dashboard de Finanzas Personales</h1>
         <p className="mt-1 text-sm text-slate-600">
@@ -108,5 +110,45 @@ export default function Home() {
         </>
       )}
     </main>
+      )}
+
+      <main className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:py-8">
+        <header>
+          <h1 className="text-xl font-bold sm:text-2xl">Dashboard de Finanzas Personales</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Sube el CSV con los movimientos de tu portafolio y conoce tu rendimiento frente a la inflación y lo que pagas en comisiones.
+            Tus datos se procesan en tu navegador; no se envían a ningún servidor.
+          </p>
+          {analisis && (
+            <p className="mt-2 text-sm text-slate-600">
+              Archivo cargado: <span className="font-medium break-all">{archivo}</span> ({movimientos?.length} movimientos válidos)
+            </p>
+          )}
+        </header>
+
+        {analisis && (
+          <PanelResumen
+            r={analisis.rendimiento}
+            c={analisis.comparacion}
+            comisiones={analisis.comisiones}
+            diversificacion={analisis.diversificacion}
+            evolucion={analisis.evolucion}
+          />
+        )}
+
+        <CargaCsv
+          onCargado={(m, nombre) => { setMovimientos(m); setArchivo(nombre); }}
+          onLimpiar={() => { setMovimientos(null); setArchivo(""); }}
+        />
+
+        {analisis && (
+          <>
+            <PanelRendimiento r={analisis.rendimiento} c={analisis.comparacion} a={analisis.ajuste} />
+            <PanelComisiones resumen={analisis.comisiones} />
+            {movimientos && <PanelDiversificacion key={archivo} movimientos={movimientos} />}
+          </>
+        )}
+      </main>
+    </>
   );
 }

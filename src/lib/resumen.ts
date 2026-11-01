@@ -1,6 +1,7 @@
 import type { Diversificacion } from "./diversificacion";
 import type { ResumenComisiones } from "./comisiones";
-import type { ComparacionInflacion, Rendimiento } from "./rendimiento";
+import { calcularRendimiento, type ComparacionInflacion, type Rendimiento } from "./rendimiento";
+import type { Movimiento } from "./tipos";
 
 export interface ResumenPortafolio {
   valorActual: number;
@@ -14,7 +15,6 @@ export interface ResumenPortafolio {
   mayorEmisora: { emisora: string; porcentaje: number } | null;
 }
 
-/** Sprint 5: junta las métricas principales de todos los módulos en un solo objeto. */
 export function construirResumen(
   r: Rendimiento,
   c: ComparacionInflacion,
@@ -30,6 +30,22 @@ export function construirResumen(
     rendimientoReal: c.rendimientoReal,
     superaInflacion: c.superaInflacion,
     comisionesTotal: com.total,
-    mayorEmisora: div.mayor ? { emisora: div.mayor.emisora, porcentaje: div.mayor.porcentaje } : null,
+    mayorEmisora: div.mayor ? { emisora: div.mayor.emisora, porcentaje: div.mayor.peso ?? div.mayor.valor / Math.max(div.total, 1) } : null,
   };
+}
+
+export interface PuntoEvolucion {
+  fecha: string;
+  capitalInvertido: number;
+  valor: number;
+  rendimiento: number;
+}
+
+export function evolucionPortafolio(movimientos: Movimiento[]): PuntoEvolucion[] {
+  const fechas = [...new Set(movimientos.map((m) => m.fecha))].sort();
+  return fechas.map((fecha) => {
+    const r = calcularRendimiento(movimientos.filter((m) => m.fecha <= fecha));
+    return { fecha, capitalInvertido: r.capitalInvertido, valor: r.valorFinal, rendimiento: r.rendimientoSimple };
+  });
+}
 }

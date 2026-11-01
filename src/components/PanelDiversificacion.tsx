@@ -1,56 +1,149 @@
 "use client";
 
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import type { Diversificacion } from "@/lib/diversificacion";
-import { formatoMXN, formatoPct } from "@/lib/format";
+import { useMemo, useState } from "react";
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { formatoFecha, formatoMXN, formatoPct } from "@/lib/format";
+import { diversificacionAl, ordenEmisoras, periodosDisponibles, type Diversificacion } from "@/lib/diversificacion";
+import type { Movimiento } from "@/lib/tipos";
+import Tarjeta from "./Tarjeta";
 
-const COLORES = ["#1d4ed8", "#047857", "#b45309", "#7c3aed", "#be123c", "#0e7490", "#4d7c0f", "#64748b"];
+const COLORES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6"];
+const GRIS_OTRAS = "#94a3b8";
 
 const TEXTO_NIVEL = {
-  alta: "Concentración alta: una sola emisora pesa más de la mitad del portafolio.",
-  moderada: "Concentración moderada: una emisora pesa más de 30 % del portafolio.",
-  baja: "Portafolio diversificado: ninguna emisora pesa más de 30 %.",
+  diversificada: "Cartera diversificada",
+  moderada: "Concentración moderada",
+  concentrada: "Cartera concentrada",
+  alta: "Cartera concentrada",
+  baja: "Cartera diversificada",
 } as const;
 
-export default function PanelDiversificacion({ d }: { d: Diversificacion }) {
-  return (
-    <section id="diversificacion" aria-labelledby="titulo-div" className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 id="titulo-div" className="text-lg font-semibold">Diversificación del portafolio</h2>
+export default function PanelDiversificacion({ movimientos }: { movimientos: Movimiento[] }) {
+  const periodos = useMemo(() => periodosDisponibles(movimientos), [movimientos]);
+  const orden = useMemo(() => ordenEmisoras(movimientos), [movimientos]);
+  const fechas = useMemo(() => movimientos.map((m) => m.fecha).sort(), [movimientos]);
+  const [corte, setCorte] = useState(periodos[0]?.corte ?? "");
+  const d = useMemo(() => diversificacionAl(movimientos, corte), [movimientos, corte]);
 
-      {d.participaciones.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-600">No hay tenencia vigente al final del periodo seleccionado.</p>
+  const colorDe = (emisora: string) => {
+    const i = orden.indexOf(emisora);
+    return i >= 0 && i < COLORES.length ? COLORES[i] : GRIS_OTRAS;
+  };
+  const esActual = corte === periodos[0]?.corte;
+  const mayor = d.activos[0];
+  const fila = Object.fromEntries(d.segmentos.map((s) => [s.emisora, +(s.peso * 100).toFixed(2)]));
+
+  return (
+    <section id="diversificacion" aria-labelledby="titulo-div" className="scroll-mt-20 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <h2 id="titulo-div" className="text-lg font-semibold">4. Diversificación por activo</h2>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="Periodo de la gráfica">
+        {periodos.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => setCorte(p.corte)}
+            aria-pressed={corte === p.corte}
+            className={`rounded-full border px-3 py-1 text-sm ${
+              corte === p.corte ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            {p.etiqueta}
+          </button>
+        ))}
+        <label className="flex w-full items-center gap-2 text-sm text-slate-600 sm:ml-auto sm:w-auto">
+          Al corte del
+          <input
+            type="date"
+            value={corte}
+            min={fechas[0]}
+            max={fechas[fechas.length - 1]}
+            onChange={(e) => e.target.value && setCorte(e.target.value)}
+            className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-slate-900 sm:flex-none"
+          />
+        </label>
+      </div>
+
+      {!d.activos.length ? (
+        <p className="mt-4 text-sm text-slate-600">No había posiciones abiertas al {formatoFecha(corte)}.</p>
       ) : (
-        <div className="mt-4 grid gap-6 lg:grid-cols-2">
-          <div className="h-64" role="img" aria-label="Gráfica de pastel: composición del portafolio por emisora">
+        <>
+          <p className="mt-3 text-sm text-slate-600">
+            Peso de cada emisora en el valor de tu tenencia {esActual ? "actual" : `al ${formatoFecha(corte)}`} ({formatoMXN(d.valorTotal)}),
+            valuada con el último precio registrado hasta esa fecha.
+          </p>
+
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <Tarjeta titulo="Emisoras en cartera" valor={String(d.activos.length)} />
+            <Tarjeta titulo="Posición más grande" valor={formatoPct(mayor.peso, 1)} detalle={mayor.emisora} />
+            <Tarjeta
+              titulo="Activos efectivos"
+              valor={d.activosEfectivos.toLocaleString("es-MX", { maximumFractionDigits: 1 })}
+              detalle={`${TEXTO_NIVEL[d.nivel]} (HHI ${Math.round(d.hhi * 10_000).toLocaleString("es-MX")})`}
+              tono={d.nivel === "concentrada" ? "negativo" : "neutro"}
+            />
+          </div>
+
+          <div className="mt-6 h-16" role="img" aria-label="Barra apilada: porcentaje del valor de la cartera por emisora">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={d.participaciones} dataKey="valor" nameKey="emisora" innerRadius={50} outerRadius={90} paddingAngle={2}>
-                  {d.participaciones.map((p, i) => <Cell key={p.emisora} fill={COLORES[i % COLORES.length]} />)}
-                </Pie>
-                <Tooltip formatter={(v: number) => formatoMXN(v)} />
-                <Legend />
-              </PieChart>
+              <BarChart layout="vertical" data={[fila]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }} barCategoryGap={0}>
+                <XAxis type="number" domain={[0, 100]} hide />
+                <YAxis type="category" hide />
+                <Tooltip
+                  cursor={false}
+                  formatter={(v: number, nombre: string) => [`${v.toLocaleString("es-MX")} %`, nombre]}
+                  labelFormatter={() => ""}
+                />
+                {d.segmentos.map((s) => (
+                  <Bar
+                    key={s.emisora}
+                    dataKey={s.emisora}
+                    stackId="cartera"
+                    fill={colorDe(s.emisora)}
+                    stroke="#ffffff"
+                    strokeWidth={2}
+                    isAnimationActive={false}
+                  />
+                ))}
+              </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="space-y-3 text-sm">
-            <p className="rounded-lg bg-slate-100 p-3 text-slate-700">{TEXTO_NIVEL[d.nivel]}</p>
-            <table className="w-full text-left">
-              <caption className="sr-only">Participación de cada emisora</caption>
+
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <caption className="sr-only">Diversificación de la cartera por emisora</caption>
               <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
-                <tr><th className="py-1">Emisora</th><th className="py-1 text-right">Valor</th><th className="py-1 text-right">Peso</th></tr>
+                <tr>
+                  <th className="py-2 pr-4">Emisora</th>
+                  <th className="py-2 pr-4 text-right">Valor</th>
+                  <th className="py-2 pr-4 text-right">Peso</th>
+                  <th className="hidden w-2/5 py-2 sm:table-cell"><span className="sr-only">Proporción</span></th>
+                </tr>
               </thead>
               <tbody>
-                {d.participaciones.map((p) => (
-                  <tr key={p.emisora} className="border-b border-slate-100">
-                    <td className="py-1.5 font-medium">{p.emisora}</td>
-                    <td className="py-1.5 text-right">{formatoMXN(p.valor)}</td>
-                    <td className="py-1.5 text-right">{formatoPct(p.porcentaje, 1)}</td>
+                {d.segmentos.map((s) => (
+                  <tr key={s.emisora} className="border-b border-slate-100">
+                    <td className="py-2 pr-4 font-medium">
+                      <span className="mr-2 inline-block h-3 w-3 rounded-sm align-middle" style={{ background: colorDe(s.emisora) }} aria-hidden />
+                      {s.emisora}
+                    </td>
+                    <td className="py-2 pr-4 text-right">{formatoMXN(s.valor)}</td>
+                    <td className="py-2 pr-4 text-right">{formatoPct(s.peso, 1)}</td>
+                    <td className="hidden py-2 sm:table-cell" aria-hidden>
+                      <div className="h-2 rounded-full bg-slate-100">
+                        <div className="h-2 rounded-full" style={{ width: `${s.peso * 100}%`, background: colorDe(s.emisora) }} />
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
+        </>
+      )}
+    </section>
+  );
+}
       )}
     </section>
   );

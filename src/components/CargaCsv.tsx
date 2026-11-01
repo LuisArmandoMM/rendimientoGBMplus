@@ -43,8 +43,8 @@ export default function CargaCsv({ onCargado, onLimpiar }: Props) {
   }
 
   return (
-    <section aria-labelledby="titulo-carga" className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 id="titulo-carga" className="text-lg font-semibold">Carga tu archivo CSV</h2>
+    <section id="carga" aria-labelledby="titulo-carga" className="scroll-mt-20 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <h2 id="titulo-carga" className="text-lg font-semibold">1. Carga tu archivo CSV</h2>
       <p className="mt-1 text-sm text-slate-600">
         Columnas requeridas: <code className="rounded bg-slate-100 px-1">fecha, tipo, emisora, titulos, precio, comision</code>.{" "}
         Tipos válidos: compra, venta, dividendo.{" "}

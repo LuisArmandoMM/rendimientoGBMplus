@@ -1,31 +1,97 @@
-import type { Tenencia } from "./rendimiento";
+import { calcularRendimiento, type Tenencia } from "./rendimiento";
+import type { Movimiento } from "./tipos";
+
+export const MAX_SEGMENTOS = 7;
 
 export interface Participacion {
   emisora: string;
   valor: number;
-  /** Fracción del portafolio (0.25 = 25 %). */
   porcentaje: number;
 }
 
-export type NivelConcentracion = "alta" | "moderada" | "baja";
+export interface PesoActivo {
+  emisora: string;
+  valor: number;
+  peso: number;
+}
+
+export type NivelConcentracion = "diversificada" | "moderada" | "concentrada" | "alta" | "baja";
 
 export interface Diversificacion {
   total: number;
-  participaciones: Participacion[];
-  mayor: Participacion | null;
+  valorTotal: number;
+  activos: PesoActivo[];
+  participaciones: PesoActivo[];
+  segmentos: PesoActivo[];
+  mayor: PesoActivo | null;
+  hhi: number;
+  activosEfectivos: number;
   nivel: NivelConcentracion;
 }
 
-/**
- * Sprint 4: composición del portafolio por emisora, a partir de la tenencia valuada.
- * Concentración: alta si una emisora pesa más de 50 %, moderada si pesa más de 30 %.
- */
 export function calcularDiversificacion(tenencias: Tenencia[]): Diversificacion {
-  const total = tenencias.reduce((s, t) => s + t.valor, 0);
-  const participaciones = tenencias
-    .map((t) => ({ emisora: t.emisora, valor: t.valor, porcentaje: total > 0 ? t.valor / total : 0 }))
+  const valorTotal = tenencias.reduce((s, t) => s + t.valor, 0);
+  const activos: PesoActivo[] = tenencias
+    .filter((t) => t.valor > 0)
+    .map((t) => ({ emisora: t.emisora, valor: t.valor, peso: valorTotal > 0 ? t.valor / valorTotal : 0 }))
     .sort((a, b) => b.valor - a.valor);
-  const mayor = participaciones[0] ?? null;
-  const nivel: NivelConcentracion = !mayor || mayor.porcentaje > 0.5 ? "alta" : mayor.porcentaje > 0.3 ? "moderada" : "baja";
-  return { total, participaciones, mayor, nivel };
+
+  const participaciones = activos;
+  const mayor = activos[0] ?? null;
+  let segmentos = activos;
+
+  if (activos.length > MAX_SEGMENTOS) {
+    const resto = activos.slice(MAX_SEGMENTOS - 1);
+    segmentos = [
+      ...activos.slice(0, MAX_SEGMENTOS - 1),
+      {
+        emisora: "Otras",
+        valor: resto.reduce((s, a) => s + a.valor, 0),
+        peso: resto.reduce((s, a) => s + a.peso, 0),
+      },
+    ];
+  }
+
+  const hhi = activos.reduce((s, a) => s + a.peso ** 2, 0);
+  const nivel: NivelConcentracion = hhi < 0.15 ? "diversificada" : hhi <= 0.25 ? "moderada" : "concentrada";
+
+  return {
+    total: valorTotal,
+    valorTotal,
+    activos,
+    participaciones,
+    segmentos,
+    mayor,
+    hhi,
+    activosEfectivos: hhi > 0 ? 1 / hhi : 0,
+    nivel: activos.length ? nivel : "diversificada",
+  };
+}
+
+export interface OpcionPeriodo {
+  id: string;
+  etiqueta: string;
+  corte: string;
+}
+
+export function periodosDisponibles(movimientos: Movimiento[]): OpcionPeriodo[] {
+  if (!movimientos.length) return [];
+  const fechas = movimientos.map((m) => m.fecha).sort();
+  const ultima = fechas[fechas.length - 1];
+  const anios = [...new Set(fechas.map((f) => f.slice(0, 4)))].filter((a) => a < ultima.slice(0, 4));
+  return [
+    { id: "actual", etiqueta: "Actual", corte: ultima },
+    ...anios.reverse().map((a) => ({ id: a, etiqueta: `Cierre ${a}`, corte: `${a}-12-31` })),
+  ];
+}
+
+export function diversificacionAl(movimientos: Movimiento[], corte: string): Diversificacion {
+  return calcularDiversificacion(calcularRendimiento(movimientos.filter((m) => m.fecha <= corte)).tenencias);
+}
+
+export function ordenEmisoras(movimientos: Movimiento[]): string[] {
+  const ordenados = [...movimientos].map((m, i) => ({ m, i }))
+    .sort((a, b) => a.m.fecha.localeCompare(b.m.fecha) || a.i - b.i);
+  return [...new Set(ordenados.map(({ m }) => m.emisora))];
+}
 }

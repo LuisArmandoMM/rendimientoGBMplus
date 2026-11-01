@@ -13,28 +13,13 @@ export default function PanelRendimiento({ r, c, a }: { r: Rendimiento; c: Compa
   ];
 
   return (
-    <section aria-labelledby="titulo-rend" className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 id="titulo-rend" className="text-lg font-semibold">2. Rendimiento del portafolio vs. inflación</h2>
+    <section id="rendimiento" aria-labelledby="titulo-rend" className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 id="titulo-rend" className="text-lg font-semibold">Rendimiento del portafolio vs. inflación</h2>
       <p className="mt-1 text-sm text-slate-600">
         Periodo analizado: {formatoFecha(r.fechaInicio)} al {formatoFecha(r.fechaFin)} ({r.dias} días).
       </p>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Tarjeta titulo="Capital invertido" valor={formatoMXN(r.capitalInvertido)} detalle="Compras + comisiones" />
-        <Tarjeta titulo="Valor actual" valor={formatoMXN(r.valorFinal)} detalle="Ventas + dividendos + tenencia" />
-        <Tarjeta
-          titulo="Ganancia"
-          valor={formatoMXN(r.ganancia)}
-          tono={r.ganancia >= 0 ? "positivo" : "negativo"}
-        />
-        <Tarjeta
-          titulo="Rendimiento simple"
-          valor={formatoPct(r.rendimientoSimple)}
-          tono={r.rendimientoSimple >= 0 ? "positivo" : "negativo"}
-        />
-      </div>
-
-      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <Tarjeta
           titulo="Capital ajustado por inflación"
           valor={formatoMXN(a.capitalAjustado)}

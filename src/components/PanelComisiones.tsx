@@ -7,8 +7,8 @@ import Tarjeta from "./Tarjeta";
 
 export default function PanelComisiones({ resumen }: { resumen: ResumenComisiones }) {
   return (
-    <section aria-labelledby="titulo-com" className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 id="titulo-com" className="text-lg font-semibold">3. Comisiones pagadas</h2>
+    <section id="comisiones" aria-labelledby="titulo-com" className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 id="titulo-com" className="text-lg font-semibold">Comisiones pagadas</h2>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <Tarjeta titulo="Total de comisiones" valor={formatoMXN(resumen.total)} tono={resumen.total > 0 ? "negativo" : "neutro"} />

@@ -54,3 +54,13 @@ Además se valida que nunca se venda más de lo que hay en cartera. Un ejemplo e
 - Rendimiento sin comisiones y puntos porcentuales que restan las comisiones.
 - Comisiones por movimiento, por emisora (gráfica), por tipo de movimiento y comisión más alta.
 - 22 pruebas unitarias (`npm test`).
+
+## Sprint 4 y Sprint 5
+
+- **Sprint 4 – Gráfica de diversificación + filtro por periodo:** `src/lib/diversificacion.ts`, `src/lib/periodo.ts`,
+  `PanelDiversificacion.tsx` y `FiltroPeriodo.tsx`. El filtro acepta periodos rápidos (todo, año en curso, 12 y 6 meses) o fechas
+  personalizadas. Lo que ya se tenía antes de la fecha inicial se toma como saldo inicial, valuado al último precio previo.
+- **Sprint 5 – Dashboard integrado con métricas principales:** `src/lib/resumen.ts` y `ResumenKpis.tsx` muestran 8 métricas
+  (valor actual, capital, ganancia, rendimiento, inflación, rendimiento real, comisiones y mayor concentración). La página
+  integra todos los módulos con navegación por secciones y el filtro de periodo aplicado a todos los paneles.
+- 32 pruebas unitarias (`npm test`).
